@@ -181,13 +181,13 @@ async function selectCheckbox(question, answers) {
   }
 }
 
-async function selectDropdown(question, answer) {
+async function selectDropdown(page, question, answer) {
   const dropdown = question.locator('[role="listbox"]').first();
 
   await dropdown.click();
 
   const option = page
-    .locator('[role="option"]')
+    .locator('[role="option"]:visible')
     .filter({ hasText: answer })
     .first();
 
@@ -219,7 +219,7 @@ function generatePerson() {
 
     birthdate: random_birthdate(),
 
-    email: random_email(),
+    email: random_email(name),
 
     id: random_id(),
   };
@@ -329,7 +329,7 @@ async function fillDropdownSection(page) {
 
     await dropdown.click();
 
-    const options = page.locator('[role="option"]');
+    const options = page.locator('[role="option"]:visible');
 
     const count = await options.count();
 
