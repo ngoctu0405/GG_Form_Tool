@@ -1,0 +1,13 @@
+{
+  "FORM_URL": "https://forms.gle/xxxxxxxx",
+  "TOTAL_SUBMISSIONS": 5,
+  "DELAY_BETWEEN_SUBMISSIONS": 3000,
+  "HEADLESS": false,
+  "RATING_WEIGHTS": {
+    "1": 15,
+    "2": 15,
+    "3": 20,
+    "4": 25,
+    "5": 25
+  }
+}
