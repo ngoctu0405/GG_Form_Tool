@@ -1,7 +1,7 @@
 {
-  "FORM_URL": "https://forms.gle/xxxxxxxx",
-  "TOTAL_SUBMISSIONS": 5,
-  "DELAY_BETWEEN_SUBMISSIONS": 3000,
+  "FORM_URL": "https://forms.gle/GygZdtryXgfkMwJ26",
+  "TOTAL_SUBMISSIONS": 20,
+  "DELAY_BETWEEN_SUBMISSIONS": 1200,
   "HEADLESS": false,
   "RATING_WEIGHTS": {
     "1": 15,

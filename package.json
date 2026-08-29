@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "web": "node web/server.js",
+    "start": "node web/server.js",
+    "check": "node --check web/server.js && node --check web/app.js && node --check gg_form_autofill.js"
   },
   "keywords": [],
   "author": "",

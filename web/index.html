@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>GG Form Tool</title>
+
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body>
+    <main class="app">
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <h1>GG Form Tool</h1>
+
+          <p>Control Panel</p>
+        </div>
+
+        <div id="statusBadge" class="status-badge stopped">
+          <span class="status-dot"></span>
+          Đã dừng
+        </div>
+      </header>
+
+      <!-- FORM CONFIG -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Cấu hình Form</h2>
+
+            <p>Thiết lập Google Form và số lần thực thi</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="formUrl"> Google Form URL </label>
+
+          <input
+            id="formUrl"
+            type="text"
+            placeholder="https://forms.gle/..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="total"> Số lần chạy </label>
+
+            <input id="total" type="number" min="1" value="5" />
+          </div>
+
+          <div class="field">
+            <label for="delay"> Delay giữa mỗi lần </label>
+
+            <div class="input-unit">
+              <input id="delay" type="number" min="0" value="3000" />
+
+              <span> ms </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggle-container">
+          <div>
+            <div class="toggle-title">Headless Mode</div>
+
+            <div class="toggle-description">Bật để chạy Chrome ẩn</div>
+          </div>
+
+          <label class="switch">
+            <input id="headless" type="checkbox" />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- RATING -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Rating Weights</h2>
+
+            <p>Tỉ lệ random điểm từ 1 đến 5</p>
+          </div>
+
+          <div id="weightTotal" class="weight-total valid">Tổng: 100%</div>
+        </div>
+
+        <div class="rating-grid">
+          <div class="rating-item">
+            <div class="rating-title">1 ★</div>
+
+            <div class="rating-input">
+              <input id="rating1" type="number" min="0" max="100" value="15" />
+
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="rating-item">
+            <div class="rating-title">2 ★</div>
+
+            <div class="rating-input">
+              <input id="rating2" type="number" min="0" max="100" value="15" />
+
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="rating-item">
+            <div class="rating-title">3 ★</div>
+
+            <div class="rating-input">
+              <input id="rating3" type="number" min="0" max="100" value="20" />
+
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="rating-item">
+            <div class="rating-title">4 ★</div>
+
+            <div class="rating-input">
+              <input id="rating4" type="number" min="0" max="100" value="25" />
+
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="rating-item">
+            <div class="rating-title">5 ★</div>
+
+            <div class="rating-input">
+              <input id="rating5" type="number" min="0" max="100" value="25" />
+
+              <span>%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTROL -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Điều khiển</h2>
+
+            <p>Lưu cấu hình và điều khiển chương trình</p>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button id="saveButton" class="button save">💾 Lưu</button>
+
+          <button id="startButton" class="button start">▶ Chạy</button>
+
+          <button id="stopButton" class="button stop">■ Dừng</button>
+        </div>
+
+        <div id="messageBox" class="message-box">Sẵn sàng.</div>
+      </section>
+
+      <footer>GG Form Tool • Local Control Panel</footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

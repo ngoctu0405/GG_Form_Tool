@@ -1,4 +1,7 @@
 import { chromium } from "playwright";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import {
   random_name,
@@ -13,7 +16,28 @@ import {
 // CONFIG
 // ============================================================
 
-const FORM_URL = "https://forms.gle/GygZdtryXgfkMwJ26";
+const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const CONFIG_PATH = path.join(ROOT_DIR, "web", "config.json");
+
+const DEFAULT_CONFIG = {
+  FORM_URL: "https://forms.gle/GygZdtryXgfkMwJ26",
+  TOTAL_SUBMISSIONS: 20,
+  DELAY_BETWEEN_SUBMISSIONS: 1200,
+  HEADLESS: false,
+  RATING_WEIGHTS: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+};
+
+function loadConfig() {
+  try {
+    return { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")) };
+  } catch (error) {
+    console.warn(`Không đọc được web/config.json, dùng cấu hình mặc định: ${error.message}`);
+    return DEFAULT_CONFIG;
+  }
+}
+
+const CONFIG = loadConfig();
+const FORM_URL = CONFIG.FORM_URL;
 
 // ============================================================
 // SỐ LẦN MUỐN ĐIỀN + GỬI
@@ -23,17 +47,17 @@ const FORM_URL = "https://forms.gle/GygZdtryXgfkMwJ26";
 // 5  = 5 lần
 // 10 = 10 lần
 //
-const TOTAL_SUBMISSIONS = 20;
+const TOTAL_SUBMISSIONS = CONFIG.TOTAL_SUBMISSIONS;
 
 // false = nhìn Chrome chạy
 // true = chạy ẩn
-const HEADLESS = false;
+const HEADLESS = CONFIG.HEADLESS;
 
 // Delay giữa từng thao tác
 const STEP_DELAY = 200;
 
 // Delay giữa 2 lượt submit
-const DELAY_BETWEEN_SUBMISSIONS = 1200;
+const DELAY_BETWEEN_SUBMISSIONS = CONFIG.DELAY_BETWEEN_SUBMISSIONS;
 
 // ============================================================
 // TỶ LỆ 1 -> 5
@@ -48,13 +72,7 @@ const DELAY_BETWEEN_SUBMISSIONS = 1200;
 // 3 -> 5 = 70%
 //
 
-const RATING_WEIGHTS = {
-  1: 15,
-  2: 15,
-  3: 20,
-  4: 25,
-  5: 25,
-};
+const RATING_WEIGHTS = CONFIG.RATING_WEIGHTS;
 
 // ============================================================
 // TEXT DATA
