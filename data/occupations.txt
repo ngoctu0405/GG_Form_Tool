@@ -1,0 +1,99 @@
+Kỹ sư phần mềm
+Lập trình viên
+Kỹ sư xây dựng
+Kiến trúc sư
+Kế toán
+Kiểm toán viên
+Nhân viên ngân hàng
+Chuyên viên tài chính
+Nhân viên kinh doanh
+Nhân viên marketing
+Chuyên viên truyền thông
+Thiết kế đồ họa
+Nhà thiết kế thời trang
+Nhiếp ảnh gia
+Biên tập viên
+Nhà báo
+Giáo viên
+Giảng viên
+Bác sĩ
+Dược sĩ
+Điều dưỡng
+Kỹ thuật viên y tế
+Luật sư
+Chuyên viên pháp lý
+Nhân viên hành chính
+Nhân sự
+Quản lý dự án
+Quản lý doanh nghiệp
+Chuyên viên tuyển dụng
+Nhân viên chăm sóc khách hàng
+Nhân viên bán hàng
+Quản lý cửa hàng
+Đầu bếp
+Nhân viên nhà hàng
+Nhân viên khách sạn
+Hướng dẫn viên du lịch
+Tài xế
+Kỹ thuật viên ô tô
+Thợ điện
+Thợ cơ khí
+Thợ mộc
+Thợ xây
+Nhân viên logistics
+Nhân viên kho
+Nhân viên xuất nhập khẩu
+Chuyên viên dữ liệu
+Nhà phân tích dữ liệu
+Quản trị hệ thống
+Chuyên viên an ninh mạng
+Nhân viên thương mại điện tử
+Nhà kinh doanh tự do
+Chủ doanh nghiệp
+Nhân viên bảo hiểm
+Môi giới bất động sản
+Nhân viên môi giới chứng khoán
+Nhân viên sản xuất
+Công nhân kỹ thuật
+Nhân viên nghiên cứu
+Nhà khoa học
+Sinh viên
+Freelancer
+Nội trợ
+Nghệ sĩ
+Nhạc sĩ
+Ca sĩ
+Diễn viên
+Huấn luyện viên
+Vận động viên
+Nhân viên văn phòng
+Chuyên viên tư vấn
+Chuyên viên bảo hiểm
+Chuyên viên du lịch
+Nhân viên dịch vụ
+Nhân viên kỹ thuật
+Quản lý sản xuất
+Quản lý bán hàng
+Chuyên viên SEO
+Chuyên viên quảng cáo
+Chuyên viên thương hiệu
+Chuyên viên tuyển dụng
+Nhân viên vận hành
+Chuyên viên kiểm soát chất lượng
+Nhân viên phòng thí nghiệm
+Nhân viên thư viện
+Thủ thư
+Nhân viên bưu chính
+Nhân viên giao hàng
+Nhân viên bảo vệ
+Nhân viên vệ sinh
+Thợ sửa chữa
+Thợ hàn
+Thợ sơn
+Thợ cắt tóc
+Chuyên viên trang điểm
+Nhân viên spa
+Chuyên viên chăm sóc sắc đẹp
+Nhân viên bán lẻ
+Chủ cửa hàng
+Chủ hộ kinh doanh
