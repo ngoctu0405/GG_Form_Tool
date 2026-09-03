@@ -1,7 +1,6 @@
 import { random_address } from "./random-address.js";
 
-export function random_id() {
-  const address = random_address();
+export function random_id(address = random_address()) {
 
   const provinceCodes = {
     "Hà Nội": "001",
@@ -67,17 +66,20 @@ export function random_id() {
     "Sóc Trăng": "094",
     "Bạc Liêu": "095",
     "Cà Mau": "096",
+    "Thành phố Huế": "046",
   };
 
-  const province = Object.keys(provinceCodes).find((name) =>
-    address.includes(name),
-  );
+  const province = String(address).split(",").at(-1)?.trim() || "";
+  const normalizedProvince = province.replace(/^Thành phố\s+/i, "");
 
-  if (!province) {
-    throw new Error("Không xác định được tỉnh từ địa chỉ");
-  }
-
-  const code = provinceCodes[province];
+  // Dữ liệu địa giới có thể được cập nhật trước bảng mã CCCD.
+  // Không để một tên tỉnh mới làm dừng toàn bộ lượt chạy.
+  const matchedCode = provinceCodes[province] || provinceCodes[normalizedProvince];
+  const code = matchedCode
+    ? matchedCode
+    : Object.values(provinceCodes)[
+        Math.floor(Math.random() * Object.values(provinceCodes).length)
+      ];
 
   const number = Math.floor(100000000 + Math.random() * 900000000);
 

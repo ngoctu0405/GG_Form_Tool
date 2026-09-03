@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
@@ -10,11 +12,21 @@ import {
   random_gender,
   random_email,
   random_id,
+  random_life_profile,
 } from "./random/random.js";
 
 // ============================================================
 // CONFIG
 // ============================================================
+
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = process.env.GROQ_MODEL || "qwen/qwen3.6-27b";
+
+if (!GROQ_API_KEY) {
+  console.warn(
+    "⚠ Không tìm thấy GROQ_API_KEY; câu tự luận dùng Groq sẽ báo lỗi.",
+  );
+}
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = path.join(ROOT_DIR, "web", "config.json");
@@ -24,16 +36,89 @@ const DEFAULT_CONFIG = {
   TOTAL_SUBMISSIONS: 20,
   DELAY_BETWEEN_SUBMISSIONS: 1200,
   HEADLESS: false,
-  RATING_WEIGHTS: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+
+  QUESTION_TYPE_WEIGHTS: {
+    multipleChoice: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+    dropdown: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+    linearScale: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+    rating: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+    multipleChoiceGrid: { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 },
+  },
 };
 
 function loadConfig() {
   try {
-    return { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")) };
+    return {
+      ...DEFAULT_CONFIG,
+      ...JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")),
+    };
   } catch (error) {
-    console.warn(`Không đọc được web/config.json, dùng cấu hình mặc định: ${error.message}`);
+    console.warn(
+      `Không đọc được web/config.json, dùng cấu hình mặc định: ${error.message}`,
+    );
     return DEFAULT_CONFIG;
   }
+}
+
+async function askAI(question, { multiline = false, person = null } = {}) {
+  if (!GROQ_API_KEY) throw new Error("Chưa cấu hình GROQ_API_KEY");
+
+  const profileContext = person
+    ? [
+        `tuổi ${person.age}`,
+        person.status,
+        person.grade,
+        person.educationLevel,
+        person.school,
+        person.studentYear,
+        person.major,
+        person.occupation,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: multiline
+              ? "Bạn đang trả lời một Google Form bằng tiếng Việt. Hãy trả lời tự nhiên ở ngôi thứ nhất, đúng trọng tâm trong 2-4 câu. Không nhắc đến AI, không giải thích và chỉ trả về nội dung câu trả lời."
+              : "Bạn đang trả lời nhanh một câu hỏi trong Google Form bằng tiếng Việt. Hãy trả lời tự nhiên ở ngôi thứ nhất bằng một cụm từ hoặc một câu ngắn. Không nhắc đến AI, không giải thích và chỉ trả về nội dung câu trả lời.",
+          },
+          {
+            role: "user",
+            content: profileContext
+              ? `Hồ sơ người trả lời: ${profileContext}.\nCâu hỏi: ${question}`
+              : question,
+          },
+        ],
+        temperature: 0.75,
+        max_tokens: multiline ? 180 : 60,
+        reasoning_effort: "none",
+        include_reasoning: false,
+      }),
+      signal: AbortSignal.timeout(15000),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Groq API lỗi ${response.status}: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return data.choices[0].message.content.trim();
 }
 
 const CONFIG = loadConfig();
@@ -72,52 +157,14 @@ const DELAY_BETWEEN_SUBMISSIONS = CONFIG.DELAY_BETWEEN_SUBMISSIONS;
 // 3 -> 5 = 70%
 //
 
-const RATING_WEIGHTS = CONFIG.RATING_WEIGHTS;
-
-// ============================================================
-// TEXT DATA
-// ============================================================
-
-const TEXT_DATA = {
-  short: [
-    "Dễ thương",
-    "Quan tâm",
-    "Ấm áp",
-    "Đáng nhớ",
-    "Vui tính",
-    "Tốt bụng",
-    "Thân thiện",
-  ],
-
-  memory: [
-    "Những lần hai đứa ngồi nói chuyện rất lâu.",
-    "Mình vẫn nhớ những lần đi chơi và nói chuyện cùng nhau.",
-    "Có vài khoảnh khắc nhỏ nhưng đến giờ mình vẫn nhớ.",
-    "Mình nhớ nhất những lúc hai đứa vui vẻ và thoải mái với nhau.",
-    "Mình vẫn nhớ những câu chuyện cũ của hai đứa.",
-  ],
-
-  paragraph: [
-    "Mình vẫn nhớ những khoảng thời gian hai đứa từng ở bên nhau. Dù đã qua một thời gian nhưng thỉnh thoảng mình vẫn nghĩ lại và thấy đó là những kỷ niệm đẹp.",
-
-    "Có nhiều chuyện cũ mình vẫn nhớ. Mình nghĩ khoảng thời gian đó vẫn có ý nghĩa với mình và nếu có dịp thì mình vẫn muốn nói chuyện lại một cách thoải mái.",
-
-    "Mình thấy những gì đã xảy ra đều là một phần của quá khứ. Có vui, có buồn, nhưng nhìn chung mình vẫn trân trọng những kỷ niệm đó.",
-
-    "Nếu có cơ hội nói chuyện lại, mình muốn mọi thứ nhẹ nhàng hơn, thẳng thắn hơn và không còn những hiểu lầm như trước.",
-
-    "Nếu hai đứa có cơ hội nói chuyện lại thì mình muốn bắt đầu bằng những cuộc trò chuyện bình thường và để mọi thứ diễn ra tự nhiên.",
-  ],
-
-  message: [
-    "Mình vẫn nhớ bạn.",
-    "Hy vọng chúng ta có thể nói chuyện lại.",
-    "Chúc bạn luôn vui vẻ nhé.",
-    "Có lẽ mình vẫn còn một chút tình cảm.",
-    "Nếu có dịp thì mình muốn hai đứa nói chuyện lại một lần.",
-    "Lâu rồi không nói chuyện, hy vọng bạn vẫn ổn.",
-  ],
-};
+const LEGACY_WEIGHTS =
+  CONFIG.RATING_WEIGHTS || DEFAULT_CONFIG.QUESTION_TYPE_WEIGHTS.linearScale;
+const QUESTION_TYPE_WEIGHTS = Object.fromEntries(
+  Object.keys(DEFAULT_CONFIG.QUESTION_TYPE_WEIGHTS).map((type) => [
+    type,
+    CONFIG.QUESTION_TYPE_WEIGHTS?.[type] || LEGACY_WEIGHTS,
+  ]),
+);
 
 // ============================================================
 // LINK
@@ -161,20 +208,24 @@ function weightedRandom(weights) {
   return Number(entries[entries.length - 1][0]);
 }
 
-function randomRating() {
-  return weightedRandom(RATING_WEIGHTS);
+function weightsFor(type) {
+  return QUESTION_TYPE_WEIGHTS[type] || QUESTION_TYPE_WEIGHTS.multipleChoice;
+}
+
+function randomRating(type = "linearScale") {
+  return weightedRandom(weightsFor(type));
 }
 
 // ============================================================
 // TÍNH ĐỘ TÍCH CỰC CỦA ĐÁP ÁN
 // ============================================================
 
-function getChoiceWeight(text, index, count) {
+function getChoiceWeight(text, index, count, type = "multipleChoice") {
   const t = String(text).trim().toLowerCase();
 
   // Nếu option là số 1 -> 5
   if (/^[1-5]$/.test(t)) {
-    return RATING_WEIGHTS[Number(t)] ?? 1;
+    return weightsFor(type)[Number(t)] ?? 1;
   }
 
   // ========================================
@@ -198,7 +249,7 @@ function getChoiceWeight(text, index, count) {
   ];
 
   if (negative.some((word) => t.includes(word))) {
-    return 3;
+    return weightsFor(type)[1];
   }
 
   // ========================================
@@ -226,7 +277,7 @@ function getChoiceWeight(text, index, count) {
   ];
 
   if (veryPositive.some((word) => t.includes(word))) {
-    return 35;
+    return weightsFor(type)[5];
   }
 
   // ========================================
@@ -253,7 +304,7 @@ function getChoiceWeight(text, index, count) {
   ];
 
   if (positive.some((word) => t.includes(word))) {
-    return 25;
+    return weightsFor(type)[4];
   }
 
   // ========================================
@@ -272,7 +323,7 @@ function getChoiceWeight(text, index, count) {
   ];
 
   if (neutral.some((word) => t.includes(word))) {
-    return 15;
+    return weightsFor(type)[3];
   }
 
   // ========================================
@@ -280,29 +331,29 @@ function getChoiceWeight(text, index, count) {
   // ========================================
 
   if (t === "có") {
-    return 25;
+    return weightsFor(type)[4];
   }
 
   if (t === "muốn") {
-    return 25;
+    return weightsFor(type)[4];
   }
 
   if (t === "không") {
-    return 5;
+    return weightsFor(type)[1];
   }
 
-  // Nếu không nhận diện được,
-  // hơi ưu tiên option phía cuối.
-  return 10 + (index / Math.max(count - 1, 1)) * 10;
+  // Không nhận diện được nội dung thì ánh xạ vị trí đáp án vào thang 1–5.
+  const level = Math.round((index / Math.max(count - 1, 1)) * 4) + 1;
+  return weightsFor(type)[level];
 }
 
 // ============================================================
 // CHỌN THEO WEIGHT
 // ============================================================
 
-function weightedChoiceIndex(texts) {
+function weightedChoiceIndex(texts, type = "multipleChoice") {
   const weights = texts.map((text, index) =>
-    getChoiceWeight(text, index, texts.length),
+    getChoiceWeight(text, index, texts.length, type),
   );
 
   const total = weights.reduce((a, b) => a + b, 0);
@@ -320,7 +371,7 @@ function weightedChoiceIndex(texts) {
   return texts.length - 1;
 }
 
-function weightedSampleIndexes(texts, amount) {
+function weightedSampleIndexes(texts, amount, type = "multipleChoice") {
   const available = texts.map((text, index) => ({
     text,
     index,
@@ -331,7 +382,7 @@ function weightedSampleIndexes(texts, amount) {
   while (result.length < amount && available.length) {
     const currentTexts = available.map((item) => item.text);
 
-    const position = weightedChoiceIndex(currentTexts);
+    const position = weightedChoiceIndex(currentTexts, type);
 
     result.push(available[position].index);
 
@@ -406,22 +457,30 @@ function generatePerson() {
 
   const name = random_name(gender);
 
-  const age = randomInt(18, 30);
+  const age = randomInt(6, 45);
+
+  const address = random_address();
+
+  const lifeProfile = random_life_profile(age, address);
 
   return {
     gender,
 
     name,
 
+    age,
+
     birthYear: String(new Date().getFullYear() - age),
 
     phone: random_phone(),
 
-    address: random_address(),
+    address,
 
     email: random_email(name),
 
-    id: random_id(),
+    id: random_id(address),
+
+    ...lifeProfile,
   };
 }
 
@@ -564,7 +623,7 @@ async function chooseRandomDropdown(page, title) {
 
   await page.waitForTimeout(300);
 
-  const options = page.locator('[role="option"]:visible');
+  const options = question.locator('[role="option"]');
 
   const count = await options.count();
 
@@ -1111,337 +1170,449 @@ async function submit(page) {
 }
 
 // ============================================================
-// PHẦN 1
+// TỰ ĐỌC VÀ ĐIỀN MỌI PHẦN CỦA FORM
 // ============================================================
 
-async function fillPart1(page, person) {
-  console.log("\n→ Phần 1");
-
-  await fillTextQuestion(page, "Tên", person.name);
-
-  await fillTextQuestion(page, "Năm sinh", person.birthYear);
-
-  await fillTextQuestion(page, "Email", person.email);
-
-  await fillTextQuestion(page, "Địa chỉ", person.address);
-
-  await fillTextQuestion(page, "Số điện thoại", person.phone);
+function plainText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/đ/g, "d");
 }
 
-// ============================================================
-// PHẦN 2
-// ============================================================
+async function answerForText(
+  title,
+  person,
+  multiline = false,
+  inputType = "text",
+) {
+  const text = plainText(title);
 
-async function fillPart2(page) {
-  console.log("\n→ Phần 2");
+  if (inputType === "email" || /e-?mail/.test(text)) return person.email;
+  if (inputType === "url" || /\b(link|url|website|trang web)\b/.test(text))
+    return pick(LINK_DATA);
+  if (
+    /\b(ho va ten|ho ten|ten cua ban|your name|full name)\b/.test(text) ||
+    text === "ten"
+  )
+    return person.name;
+  if (/\b(so dien thoai|dien thoai|phone|mobile)\b/.test(text))
+    return person.phone;
+  if (/\b(dia chi|address)\b/.test(text)) return person.address;
+  if (/\b(nam sinh|birth year)\b/.test(text)) return person.birthYear;
+  if (/\b(tuoi|age)\b/.test(text))
+    return String(new Date().getFullYear() - Number(person.birthYear));
+  if (/\b(cccd|cmnd|can cuoc|identity|id number)\b/.test(text))
+    return person.id;
+  if (/\b(gioi tinh|gender|sex)\b/.test(text)) return person.gender;
+  if (/\b(lop may|dang hoc lop|hoc lop|khoi lop|grade)\b/.test(text) && person.grade)
+    return person.grade;
+  if (/\b(cap may|cap hoc|bac hoc|education level)\b/.test(text) && person.educationLevel)
+    return person.educationLevel;
+  if (
+    /\b(sinh vien nam may|nam thu may|nam may|student year)\b/.test(text) &&
+    person.studentYear
+  )
+    return person.studentYear;
+  if (/\b(nganh hoc|chuyen nganh|major)\b/.test(text) && person.major)
+    return person.major;
+  if (/\b(nghe nghiep|cong viec|viec lam|occupation|job)\b/.test(text))
+    return person.occupation;
+  if (
+    /\b(hien dang la|hien la|dang la|hoc hay di lam|tinh trang hien tai|doi tuong|vai tro|status)\b/.test(
+      text,
+    )
+  )
+    return person.status;
+  if (
+    /\b(truong dai hoc|dai hoc nao|hoc dai hoc|ten dai hoc|university|college)\b/.test(
+      text,
+    ) ||
+    /\b(hoc|theo hoc) (tai )?truong( nao)?\b/.test(text) ||
+    /\btruong (ban |anh |chi |em )?(dang |tung )?(theo )?hoc\b/.test(text)
+  )
+    if (person.school) return person.school;
+  if (/\b(ma so|code|number|so luong)\b/.test(text) || inputType === "number")
+    return String(randomInt(1, 100));
 
-  const questions = [
-    "Bạn còn thích mình không?",
-
-    "Khi vô tình gặp lại mình, cảm xúc đầu tiên của bạn là gì?",
-
-    "Nếu mình chủ động nhắn tin hỏi thăm, bạn sẽ?",
-
-    "Nếu có cơ hội quay lại khoảng thời gian hai đứa còn bên nhau, bạn có muốn không?",
-
-    "Nếu hôm nay mình rủ bạn đi uống nước riêng, bạn sẽ?",
-  ];
-
-  for (const title of questions) {
-    await chooseRandomRadio(page, title);
+  try {
+    console.log(`   ↳ Đang hỏi Groq: ${title}`);
+    return await askAI(title, { multiline, person });
+  } catch (error) {
+    throw new Error(`Groq không trả lời được câu "${title}": ${error.message}`);
   }
 }
 
-// ============================================================
-// PHẦN 3
-// ============================================================
-
-async function fillPart3(page) {
-  console.log("\n→ Phần 3");
-
-  const questions = [
-    "Điều gì về mình khiến bạn vẫn còn nhớ?",
-
-    "Những điều nào bạn từng muốn làm cùng mình?",
-
-    "Nếu hiện tại mình vẫn còn quan tâm bạn, bạn sẽ cảm thấy?",
-
-    "Bạn từng nhớ mình vì những điều nào?",
-
-    "Nếu chúng ta nói chuyện lại, bạn muốn làm gì?",
-  ];
-
-  for (const title of questions) {
-    await chooseRandomCheckboxes(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 4
-// ============================================================
-
-async function fillPart4(page) {
-  console.log("\n→ Phần 4");
-
-  const questions = [
-    "Theo bạn, khả năng hai đứa nói chuyện lại thường xuyên là:",
-
-    "Nếu mình rủ bạn đi uống nước riêng, bạn sẽ:",
-
-    "Nếu phải chọn một mức độ tình cảm hiện tại dành cho mình:",
-
-    "Mức độ bạn muốn gặp lại mình?",
-
-    "Nếu được chọn một điều cho mối quan hệ này?",
-  ];
-
-  for (const title of questions) {
-    await chooseRandomDropdown(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 5
-// ============================================================
-
-async function fillPart5(page) {
-  console.log("\n→ Phần 5");
-
-  const questions = [
-    "Link một bức ảnh khiến bạn nhớ đến mình?",
-    "Link một bức ảnh kỷ niệm của hai đứa?",
-    "Link một bức ảnh mà bạn nghĩ mình sẽ thích?",
-    "Link một bức ảnh thể hiện tâm trạng hiện tại của bạn?",
-    "Link bất kỳ hình ảnh / tệp nào bạn muốn gửi cho mình?",
-  ];
-
-  for (const title of questions) {
-    await fillTextQuestion(page, title, pick(LINK_DATA));
-  }
-}
-
-// ============================================================
-// PHẦN 6
-// ============================================================
-
-async function fillPart6(page) {
-  console.log("\n→ Phần 6");
-
-  const questions = [
-    "Bạn còn thích mình đến mức nào?",
-    "Bạn còn nhớ mình đến mức nào?",
-    "Bạn muốn nói chuyện lại với mình đến mức nào?",
-    "Bạn hài lòng với những gì hai đứa từng có?",
-    "Bạn nghĩ chúng ta còn cơ hội đến mức nào?",
-  ];
-
-  for (const title of questions) {
-    await chooseWeightedScale(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 7
-// ============================================================
-
-async function fillPart7(page) {
-  console.log("\n→ Phần 7");
-
-  const questions = [
-    "Bạn đánh giá mình là người yêu như thế nào?",
-    "Bạn đánh giá mức độ quan tâm của mình trước đây?",
-    "Bạn đánh giá những kỷ niệm của chúng ta?",
-    "Bạn đánh giá khả năng chúng ta nói chuyện lại?",
-    "Bạn đánh giá cảm xúc hiện tại dành cho mình?",
-  ];
-
-  for (const title of questions) {
-    await chooseWeightedScale(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 8
-// ============================================================
-
-async function fillPart8(page) {
-  console.log("\n→ Phần 8");
-
-  const questions = [
-    "Mức độ cảm xúc của bạn dành cho mình",
-    "Bạn cảm thấy thế nào về những điều sau?",
-    "Mức độ bạn muốn làm những việc này cùng mình",
-    "Bạn đánh giá những khía cạnh này của chúng ta",
-    "Bạn nghĩ mình còn xuất hiện trong cuộc sống của bạn ở mức nào?",
-  ];
-
-  for (const title of questions) {
-    await fillRadioGrid(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 9
-// ============================================================
-
-async function fillPart9(page) {
-  console.log("\n→ Phần 9");
-
-  const questions = [
-    "Những điều bạn từng làm vì mình",
-    "Những điều bạn muốn làm nếu gặp lại mình",
-    "Những điều khiến bạn nhớ về mình",
-    "Những cảm xúc bạn từng có với mình",
-    "Những điều bạn mong muốn trong tương lai",
-  ];
-
-  for (const title of questions) {
-    await fillCheckboxGrid(page, title);
-  }
-}
-
-// ============================================================
-// PHẦN 10
-// ============================================================
-
-async function fillPart10(page) {
-  console.log("\n→ Phần 10");
-
-  const answers = {
-    "Một từ để mô tả mình?": pick(TEXT_DATA.short),
-
-    "Bạn nhớ điều gì nhất về mình?": pick(TEXT_DATA.memory),
-
-    "Điều đầu tiên bạn nghĩ đến khi nghe tên mình?": pick(TEXT_DATA.short),
-
-    "Nếu được nhắn cho mình một câu, bạn sẽ nói gì?": pick(TEXT_DATA.message),
-
-    "Bạn nghĩ mình còn tình cảm với bạn không?": pick([
-      "Có",
-      "Có",
-      "Có lẽ",
-      "Mình nghĩ là có",
-      "Mình nghĩ là có",
-      "Không chắc",
-    ]),
-  };
-
-  for (const [question, answer] of Object.entries(answers)) {
-    await fillTextQuestion(page, question, answer);
-  }
-}
-
-// ============================================================
-// PHẦN 11
-// ============================================================
-
-async function fillPart11(page) {
-  console.log("\n→ Phần 11");
-
-  const answers = {
-    "Hãy kể một kỷ niệm về mình mà bạn vẫn còn nhớ.": pick(TEXT_DATA.memory),
-
-    "Điều gì khiến bạn từng thích mình?": pick(TEXT_DATA.paragraph),
-
-    "Bạn cảm thấy thế nào khi nghĩ về khoảng thời gian hai đứa từng ở bên nhau?":
-      pick(TEXT_DATA.paragraph),
-
-    "Có điều gì bạn từng muốn nói với mình nhưng chưa nói không?": pick(
-      TEXT_DATA.paragraph,
+function findProfileChoiceIndex(texts, aliases) {
+  const normalizedTexts = texts.map(plainText);
+  const normalizedAliases = aliases.filter(Boolean).map(plainText);
+  let index = normalizedTexts.findIndex((option) =>
+    normalizedAliases.some((alias) => option === alias),
+  );
+  if (index >= 0) return index;
+  index = normalizedTexts.findIndex((option) =>
+    normalizedAliases.some(
+      (alias) => option.includes(alias) || alias.includes(option),
     ),
+  );
+  return index >= 0 ? index : null;
+}
 
-    "Nếu chúng ta có cơ hội bắt đầu lại, bạn muốn mọi thứ sẽ như thế nào?":
-      pick(TEXT_DATA.paragraph),
-  };
+function ageRangeChoiceIndex(texts, age) {
+  for (let index = 0; index < texts.length; index++) {
+    const option = plainText(texts[index]);
+    const numbers = option.match(/\d+/g)?.map(Number) || [];
+    if (/duoi|nho hon/.test(option) && numbers[0] && age < numbers[0]) return index;
+    if (/tren|lon hon/.test(option) && numbers[0] && age > numbers[0]) return index;
+    if (numbers.length >= 2 && age >= numbers[0] && age <= numbers[1]) return index;
+    if (numbers.length === 1 && age === numbers[0]) return index;
+  }
+  return null;
+}
 
-  for (const [question, answer] of Object.entries(answers)) {
-    await fillTextQuestion(page, question, answer);
+function profileChoiceIndex(title, texts, person) {
+  const text = plainText(title);
+  const normalizedOptions = texts.map(plainText);
+  const statusOptionCount = normalizedOptions.filter((option) =>
+    /^(hoc sinh|sinh vien|dang di lam|nguoi di lam|di lam)$/.test(option),
+  ).length;
+
+  if (/\b(gioi tinh|gender|sex)\b/.test(text)) {
+    return findProfileChoiceIndex(
+      texts,
+      person.gender === "male" ? ["Nam", "Male"] : ["Nữ", "Female"],
+    );
+  }
+  if (/\b(tuoi|do tuoi|age)\b/.test(text)) {
+    return ageRangeChoiceIndex(texts, person.age);
+  }
+  if (
+    statusOptionCount >= 2 ||
+    /\b(hien dang la|hien la|dang la|hoc hay di lam|tinh trang hien tai|doi tuong|vai tro|status)\b/.test(
+      text,
+    )
+  ) {
+    const aliases = {
+      "Học sinh": ["Học sinh"],
+      "Sinh viên": ["Sinh viên"],
+      "Đang đi làm": ["Đang đi làm", "Người đi làm", "Đi làm"],
+    }[person.status];
+    const index = findProfileChoiceIndex(texts, aliases || [person.status]);
+    if (index !== null) return index;
+  }
+  if (/\b(lop may|dang hoc lop|hoc lop|khoi lop|grade)\b/.test(text) && person.grade) {
+    return findProfileChoiceIndex(texts, [person.grade, String(person.gradeNumber)]);
+  }
+  if (/\b(cap may|cap hoc|bac hoc|education level)\b/.test(text) && person.educationLevel) {
+    const aliases = {
+      "Tiểu học": ["Tiểu học", "Cấp 1"],
+      THCS: ["THCS", "Trung học cơ sở", "Cấp 2"],
+      THPT: ["THPT", "Trung học phổ thông", "Cấp 3"],
+      "Đại học": ["Đại học"],
+    }[person.educationLevel];
+    return findProfileChoiceIndex(texts, aliases || [person.educationLevel]);
+  }
+  if (/\b(sinh vien nam may|nam thu may|nam may|student year)\b/.test(text) && person.studentYear) {
+    const yearWords = ["nhất", "hai", "ba", "tư", "năm"];
+    return findProfileChoiceIndex(texts, [
+      person.studentYear,
+      `Năm thứ ${person.studentYearNumber}`,
+      `Năm ${yearWords[person.studentYearNumber - 1]}`,
+    ]);
+  }
+  if (/\b(nganh hoc|chuyen nganh|major)\b/.test(text) && person.major) {
+    return findProfileChoiceIndex(texts, [person.major]);
+  }
+  if (/\b(nghe nghiep|cong viec|viec lam|occupation|job)\b/.test(text)) {
+    return findProfileChoiceIndex(texts, [person.occupation, person.status]);
+  }
+  if (/\b(truong|dai hoc|university|college)\b/.test(text) && person.school) {
+    return findProfileChoiceIndex(texts, [person.school, person.university]);
+  }
+  return null;
+}
+
+async function questionTitle(question, index) {
+  const heading = question.locator('[role="heading"]').first();
+  const headingText = (await heading.count())
+    ? await heading.innerText().catch(() => "")
+    : "";
+  if (headingText.trim()) return headingText.replace(/\s*\*\s*$/, "").trim();
+
+  const text = await question.innerText().catch(() => "");
+  return (
+    text
+      .split("\n")
+      .map((line) => line.trim())
+      .find(Boolean) || `Câu ${index + 1}`
+  );
+}
+
+async function encodedQuestionType(question) {
+  const elements = question.locator("[data-params]");
+  const count = await elements.count();
+
+  for (let index = 0; index < count; index++) {
+    const params =
+      (await elements.nth(index).getAttribute("data-params")) || "";
+    const match = params.match(/,\s*(0|1|2|3|4|5|7|9|10|18)\s*,\s*\[\[/);
+    if (match) return Number(match[1]);
+  }
+
+  return null;
+}
+
+async function chooseFromRadios(question, title, type, person) {
+  const options = question.locator('[role="radio"]:visible');
+  const count = await options.count();
+  if (!count) return;
+
+  const texts = await options.allTextContents();
+  const rating = randomRating(type);
+  const scaledIndex = Math.round(((rating - 1) / 4) * Math.max(count - 1, 0));
+  const profileIndex =
+    type === "multipleChoice" ? profileChoiceIndex(title, texts, person) : null;
+  const index =
+    profileIndex !== null
+      ? profileIndex
+      : ["linearScale", "rating"].includes(type)
+        ? scaledIndex
+        : weightedChoiceIndex(texts, type);
+
+  await options.nth(index).scrollIntoViewIfNeeded();
+  await options.nth(index).click();
+  console.log(`   ✓ ${title} => ${String(texts[index] || index + 1).trim()}`);
+}
+
+async function chooseFromCheckboxes(page, question, title) {
+  const options = question.locator('[role="checkbox"]:visible');
+  const count = await options.count();
+  if (!count) return;
+
+  const texts = await options.allTextContents();
+  const amount = Math.min(count, weightedRandom({ 1: 45, 2: 40, 3: 15 }));
+  const indexes = weightedSampleIndexes(texts, amount, "multipleChoice");
+
+  for (const index of indexes) {
+    await options.nth(index).click();
+    await page.waitForTimeout(60);
+  }
+  console.log(`   ✓ ${title} => chọn ${indexes.length} đáp án`);
+}
+
+async function chooseFromDropdown(page, question, title, person) {
+  const dropdown = question.locator('[role="listbox"]:visible').first();
+  if (!(await dropdown.count())) return;
+
+  await dropdown.scrollIntoViewIfNeeded();
+  await dropdown.click();
+  await page.waitForTimeout(180);
+
+  const options = page.locator('[role="option"]:visible');
+  const texts = (await options.allTextContents()).map((text) => text.trim());
+  const valid = texts
+    .map((text, index) => ({ text, index }))
+    .filter(({ text }) => text && !/^(chọn|choose|select)$/i.test(text));
+  if (!valid.length) throw new Error(`Không đọc được đáp án của câu: ${title}`);
+
+  const validTexts = valid.map((item) => item.text);
+  const profileIndex = profileChoiceIndex(title, validTexts, person);
+  const selectedIndex =
+    profileIndex !== null
+      ? profileIndex
+      : weightedChoiceIndex(validTexts, "dropdown");
+  const selected = valid[selectedIndex];
+
+  // Các option của nhiều dropdown vẫn tồn tại trong DOM và có thể che nhau.
+  // Dùng bàn phím trên listbox đang focus để luôn chọn đúng dropdown hiện tại.
+  for (let step = 0; step <= selectedIndex; step++) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(40);
+  }
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(120);
+  console.log(`   ✓ ${title} => ${selected.text}`);
+}
+
+async function fillRadioGridDynamic(page, question, title) {
+  const rows = question.locator('[role="radiogroup"]');
+  const rowCount = await rows.count();
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const options = rows.nth(rowIndex).locator('[role="radio"]:visible');
+    const count = await options.count();
+    if (!count) continue;
+
+    const rating = randomRating("multipleChoiceGrid");
+    const optionIndex = Math.round(((rating - 1) / 4) * Math.max(count - 1, 0));
+    await options.nth(optionIndex).click();
+    await page.waitForTimeout(60);
+  }
+  console.log(`   ✓ ${title} => ${rowCount} hàng`);
+}
+
+async function fillCheckboxGridDynamic(page, question, title) {
+  const groups = question.locator('[role="group"]');
+  const groupCount = await groups.count();
+  let filledRows = 0;
+
+  for (let groupIndex = 0; groupIndex < groupCount; groupIndex++) {
+    const group = groups.nth(groupIndex);
+    const nestedGroups = await group.locator('[role="group"]').count();
+    const options = group.locator('[role="checkbox"]:visible');
+    const count = await options.count();
+    if (!count || nestedGroups) continue;
+
+    const texts = await options.allTextContents();
+    const amount = Math.min(count, Math.random() < 0.85 ? 1 : 2);
+    const indexes = weightedSampleIndexes(texts, amount, "multipleChoice");
+    for (const optionIndex of indexes) await options.nth(optionIndex).click();
+    filledRows++;
+  }
+
+  if (!filledRows) await chooseFromCheckboxes(page, question, title);
+  else console.log(`   ✓ ${title} => ${filledRows} hàng`);
+}
+
+async function fillDateDynamic(question, title) {
+  const date = randomDateParts();
+  const native = question.locator('input[type="date"]:visible').first();
+  if (await native.count()) {
+    await native.fill(date.iso);
+  } else {
+    const inputs = question.locator("input:visible");
+    const count = await inputs.count();
+    const values = [date.day, date.month, date.year];
+    for (let index = 0; index < Math.min(count, values.length); index++)
+      await inputs.nth(index).fill(values[index]);
+  }
+  console.log(`   ✓ ${title} => ${date.iso}`);
+}
+
+async function fillTimeDynamic(question, title) {
+  const time = randomTimeParts();
+  const native = question.locator('input[type="time"]:visible').first();
+  if (await native.count()) {
+    await native.fill(time.value);
+  } else {
+    const inputs = question.locator("input:visible");
+    const count = await inputs.count();
+    const values = [time.hour, time.minute];
+    for (let index = 0; index < Math.min(count, values.length); index++)
+      await inputs.nth(index).fill(values[index]);
+  }
+  console.log(`   ✓ ${title} => ${time.value}`);
+}
+
+async function fillQuestion(page, question, index, person) {
+  const title = await questionTitle(question, index);
+  const encodedType = await encodedQuestionType(question);
+  const textarea = question.locator("textarea:visible").first();
+  const textInput = question
+    .locator('input:not([type="hidden"]):not([type="file"]):visible')
+    .first();
+  const radioGroups = question.locator('[role="radiogroup"]');
+  const checkboxGroups = question.locator('[role="group"]');
+  const radioCount = await question.locator('[role="radio"]:visible').count();
+  const checkboxCount = await question
+    .locator('[role="checkbox"]:visible')
+    .count();
+
+  if (await question.locator('input[type="file"]:visible').count()) {
+    console.log(`   ⚠ Bỏ qua câu tải tệp (cần file và đăng nhập): ${title}`);
+    return;
+  }
+  if (
+    encodedType === 9 ||
+    (await question.locator('input[type="date"]:visible').count())
+  )
+    return fillDateDynamic(question, title);
+  if (
+    encodedType === 10 ||
+    (await question.locator('input[type="time"]:visible').count())
+  )
+    return fillTimeDynamic(question, title);
+  if (
+    encodedType === 3 ||
+    (await question.locator('[role="listbox"]:visible').count())
+  )
+    return chooseFromDropdown(page, question, title, person);
+  if (encodedType === 7 && checkboxCount)
+    return fillCheckboxGridDynamic(page, question, title);
+  if ((encodedType === 7 || (await radioGroups.count()) > 1) && radioCount)
+    return fillRadioGridDynamic(page, question, title);
+  if (encodedType === 4 || checkboxCount)
+    return chooseFromCheckboxes(page, question, title);
+  if (encodedType === 18 && radioCount)
+    return chooseFromRadios(question, title, "rating", person);
+  if (encodedType === 5 && radioCount)
+    return chooseFromRadios(question, title, "linearScale", person);
+  if (encodedType === 2 || radioCount)
+    return chooseFromRadios(question, title, "multipleChoice", person);
+
+  if (await textarea.count()) {
+    const answer = await answerForText(title, person, true);
+    await textarea.fill(answer);
+    console.log(`   ✓ ${title} => ${answer}`);
+    return;
+  }
+
+  if (await textInput.count()) {
+    const inputType = (await textInput.getAttribute("type")) || "text";
+    const answer = await answerForText(
+      title,
+      person,
+      encodedType === 1,
+      inputType,
+    );
+    await textInput.fill(answer);
+    console.log(`   ✓ ${title} => ${answer}`);
+    return;
+  }
+
+  if (await checkboxGroups.count())
+    console.log(`   ⚠ Không xác định được loại câu: ${title}`);
+}
+
+async function fillCurrentPage(page, pageNumber, person) {
+  const questions = page.locator('[role="listitem"]:visible');
+  const count = await questions.count();
+  console.log(`\n→ Đọc phần ${pageNumber}: ${count} câu`);
+
+  for (let index = 0; index < count; index++) {
+    await fillQuestion(page, questions.nth(index), index, person);
+    await page.waitForTimeout(STEP_DELAY);
   }
 }
 
-// ============================================================
-// PHẦN 12
-// ============================================================
-
-async function fillPart12(page) {
-  console.log("\n→ Phần 12");
-
-  const questions = [
-    "Ngày bạn bắt đầu có tình cảm với mình?",
-    "Ngày kỷ niệm mà bạn nhớ nhất?",
-    "Ngày gần nhất bạn nhớ đến mình?",
-    "Nếu được chọn một ngày để gặp lại mình?",
-    "Ngày bạn muốn chúng ta nói chuyện lại?",
-  ];
-
-  for (const title of questions) {
-    await fillDateQuestion(page, title);
+async function visibleNextButton(page) {
+  const candidates = page.getByRole("button", { name: /^(tiếp|next)$/i });
+  const count = await candidates.count();
+  for (let index = 0; index < count; index++) {
+    if (
+      await candidates
+        .nth(index)
+        .isVisible()
+        .catch(() => false)
+    )
+      return candidates.nth(index);
   }
+  return null;
 }
-
-// ============================================================
-// PHẦN 13
-// ============================================================
-
-async function fillPart13(page) {
-  console.log("\n→ Phần 13");
-
-  const questions = [
-    "Khoảng thời gian bạn thường nhớ đến mình?",
-    "Bạn thường muốn nói chuyện với mình vào lúc nào?",
-    "Nếu được gặp mình hôm nay, bạn muốn gặp lúc mấy giờ?",
-    "Bạn thường xem lại tin nhắn cũ vào lúc nào?",
-    "Nếu mình nhắn cho bạn ngay bây giờ, bạn muốn nhận tin lúc mấy giờ?",
-  ];
-
-  for (const title of questions) {
-    await fillTimeQuestion(page, title);
-  }
-}
-
-// ============================================================
-// ĐIỀN 1 FORM
-// ============================================================
 
 async function fillOneForm(page, person) {
-  await fillPart1(page, person);
+  for (let pageNumber = 1; pageNumber <= 50; pageNumber++) {
+    await fillCurrentPage(page, pageNumber, person);
+    const nextButton = await visibleNextButton(page);
+    if (!nextButton) return;
 
-  await nextPage(page);
+    await nextButton.scrollIntoViewIfNeeded();
+    await nextButton.click();
+    await page.waitForTimeout(700);
+  }
 
-  await fillPart2(page);
-  await nextPage(page);
-
-  await fillPart3(page);
-  await nextPage(page);
-
-  await fillPart4(page);
-  await nextPage(page);
-
-  await fillPart5(page);
-  await nextPage(page);
-
-  await fillPart6(page);
-  await nextPage(page);
-
-  await fillPart7(page);
-  await nextPage(page);
-
-  await fillPart8(page);
-  await nextPage(page);
-
-  await fillPart9(page);
-  await nextPage(page);
-
-  await fillPart10(page);
-  await nextPage(page);
-
-  await fillPart11(page);
-  await nextPage(page);
-
-  await fillPart12(page);
-  await nextPage(page);
-
-  await fillPart13(page);
+  throw new Error("Form có quá 50 phần hoặc đang bị lặp điều hướng.");
 }
 
 // ============================================================
@@ -1471,16 +1642,34 @@ async function run() {
   console.log("GOOGLE FORM AUTO FILL");
 
   console.log(`Số lượt: ${TOTAL_SUBMISSIONS}`);
+  console.log(`Chế độ: ${HEADLESS ? "Chạy ẩn" : "Hiện trình duyệt"}`);
 
   console.log("======================================");
 
-  const browser = await chromium.launch({
-    headless: HEADLESS,
-  });
+  let browser;
+  if (HEADLESS) {
+    browser = await chromium.launch({ headless: true });
+  } else {
+    try {
+      browser = await chromium.launch({
+        channel: "chrome",
+        headless: false,
+        args: ["--start-maximized"],
+      });
+      console.log("Trình duyệt: Google Chrome (hiển thị)");
+    } catch (error) {
+      console.warn(
+        `Không mở được Google Chrome (${error.message}); chuyển sang Chromium.`,
+      );
+      browser = await chromium.launch({
+        headless: false,
+        args: ["--start-maximized"],
+      });
+      console.log("Trình duyệt: Chromium (hiển thị)");
+    }
+  }
 
-  const context = await browser.newContext();
-
-  const page = await context.newPage();
+  const context = await browser.newContext(HEADLESS ? {} : { viewport: null });
 
   let successCount = 0;
 
@@ -1492,35 +1681,32 @@ async function run() {
 
       console.log("======================================");
 
-      // ====================================
-      // LUÔN MỞ FORM MỚI Ở ĐẦU MỖI VÒNG
-      // ====================================
+      console.log("\n🗂 MỞ TAB MỚI...");
+      const page = await context.newPage();
 
-      await openNewForm(page);
+      try {
+        await openNewForm(page);
 
-      // ====================================
-      // RANDOM NGƯỜI MỚI
-      // ====================================
+        const person = generatePerson();
+        console.log("\n👤 Person:");
+        console.log(person);
 
-      const person = generatePerson();
-
-      console.log("\n👤 Person:");
-
-      console.log(person);
-
-      // ====================================
-      // ĐIỀN
-      // ====================================
-
-      await fillOneForm(page, person);
-
-      // ====================================
-      // GỬI
-      // ====================================
-
-      await submit(page);
-
-      successCount++;
+        await fillOneForm(page, person);
+        await submit(page);
+        successCount++;
+      } catch (error) {
+        try {
+          await page.screenshot({
+            path: "form-error.png",
+            fullPage: true,
+          });
+          console.log("📸 Đã lưu form-error.png");
+        } catch {}
+        throw error;
+      } finally {
+        await page.close().catch(() => {});
+        console.log("🗙 Đã đóng tab của lượt này");
+      }
 
       console.log("\n======================================");
 
@@ -1538,7 +1724,9 @@ async function run() {
       if (submission < TOTAL_SUBMISSIONS) {
         console.log(`\n⏳ Chuẩn bị làm form ${submission + 1}...`);
 
-        await page.waitForTimeout(DELAY_BETWEEN_SUBMISSIONS);
+        await new Promise((resolve) =>
+          setTimeout(resolve, DELAY_BETWEEN_SUBMISSIONS),
+        );
       }
     }
 
@@ -1553,17 +1741,10 @@ async function run() {
     console.error("\n❌ ERROR:");
 
     console.error(error);
+    console.error(`__FORMFLOW_ERROR__${error?.message || String(error)}`);
+    process.exitCode = 1;
 
     console.log(`\nĐã gửi được ${successCount}/${TOTAL_SUBMISSIONS}`);
-
-    try {
-      await page.screenshot({
-        path: "form-error.png",
-        fullPage: true,
-      });
-
-      console.log("📸 Đã lưu form-error.png");
-    } catch {}
   } finally {
     await browser.close();
   }

@@ -18,6 +18,23 @@ const CONFIG_PATH = path.join(WEB_DIR, "config.json");
 const AUTOFILL_PATH = path.join(ROOT_DIR, "gg_form_autofill.js");
 
 let runningProcess = null;
+let runLogs = [];
+let lastRunResult = null;
+let currentRunError = null;
+
+function appendRunLog(chunk) {
+  const text = String(chunk).replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  for (const line of lines) {
+    if (line.startsWith("__FORMFLOW_ERROR__")) {
+      currentRunError = line.slice("__FORMFLOW_ERROR__".length).trim();
+      runLogs.push(`LỖI: ${currentRunError}`);
+    } else {
+      runLogs.push(line);
+    }
+  }
+  runLogs = runLogs.slice(-80);
+}
 
 // =====================================
 // MIME TYPES
@@ -43,40 +60,48 @@ function sendJSON(res, data, status = 200) {
     "Content-Type": "application/json; charset=utf-8",
 
     "Cache-Control": "no-store",
+    "Access-Control-Allow-Origin": "*",
   });
 
   res.end(JSON.stringify(data));
+}
+
+const WEIGHT_TYPES = ["multipleChoice", "dropdown", "linearScale", "rating", "multipleChoiceGrid"];
+const DEFAULT_WEIGHTS = { 1: 15, 2: 15, 3: 20, 4: 25, 5: 25 };
+
+function normalizeWeights(weights, label) {
+  if (!weights || typeof weights !== "object") throw new Error(`Thiếu tỷ lệ cho ${label}.`);
+  const normalized = Object.fromEntries([1, 2, 3, 4, 5].map((rating) => [rating, Number(weights[rating])]));
+  if (Object.values(normalized).some((weight) => !Number.isFinite(weight) || weight < 0 || weight > 100)) {
+    throw new Error(`Mỗi tỷ lệ của ${label} phải nằm trong khoảng 0–100.`);
+  }
+  if (Object.values(normalized).reduce((sum, weight) => sum + weight, 0) !== 100) {
+    throw new Error(`Tổng tỷ lệ của ${label} phải bằng 100%.`);
+  }
+  return normalized;
 }
 
 function validateConfig(config) {
   const formUrl = String(config.FORM_URL || "").trim();
   const total = Number(config.TOTAL_SUBMISSIONS);
   const delay = Number(config.DELAY_BETWEEN_SUBMISSIONS);
-  const weights = config.RATING_WEIGHTS;
 
   if (!/^https:\/\/(forms\.gle|docs\.google\.com)\//i.test(formUrl)) {
     throw new Error("FORM_URL phải là URL Google Form hợp lệ.");
   }
   if (!Number.isInteger(total) || total < 1) throw new Error("TOTAL_SUBMISSIONS phải là số nguyên dương.");
   if (!Number.isFinite(delay) || delay < 0) throw new Error("DELAY_BETWEEN_SUBMISSIONS không được âm.");
-  if (!weights || typeof weights !== "object") throw new Error("Thiếu RATING_WEIGHTS.");
-
-  const normalizedWeights = Object.fromEntries(
-    [1, 2, 3, 4, 5].map((rating) => [rating, Number(weights[rating])]),
+  const legacyWeights = config.RATING_WEIGHTS || DEFAULT_WEIGHTS;
+  const questionTypeWeights = Object.fromEntries(
+    WEIGHT_TYPES.map((type) => [type, normalizeWeights(config.QUESTION_TYPE_WEIGHTS?.[type] || legacyWeights, type)]),
   );
-  if (Object.values(normalizedWeights).some((weight) => !Number.isFinite(weight) || weight < 0)) {
-    throw new Error("Mỗi Rating Weight phải là số không âm.");
-  }
-  if (Object.values(normalizedWeights).reduce((sum, weight) => sum + weight, 0) !== 100) {
-    throw new Error("Tổng RATING_WEIGHTS phải bằng 100.");
-  }
 
   return {
     FORM_URL: formUrl,
     TOTAL_SUBMISSIONS: total,
     DELAY_BETWEEN_SUBMISSIONS: delay,
     HEADLESS: Boolean(config.HEADLESS),
-    RATING_WEIGHTS: normalizedWeights,
+    QUESTION_TYPE_WEIGHTS: questionTypeWeights,
   };
 }
 
@@ -151,6 +176,17 @@ function serveStaticFile(req, res) {
 
 const server = http.createServer((req, res) => {
   console.log(`${req.method} ${req.url}`);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+    });
+    res.end();
+    return;
+  }
 
   // =================================
   // GET CONFIG
@@ -227,8 +263,20 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && req.url === "/status") {
     sendJSON(res, {
       running: runningProcess !== null,
+      logs: runLogs.slice(-20),
+      lastRunResult,
     });
 
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/status/clear") {
+    if (!runningProcess) {
+      runLogs = [];
+      lastRunResult = null;
+      currentRunError = null;
+    }
+    sendJSON(res, { success: true });
     return;
   }
 
@@ -259,6 +307,9 @@ const server = http.createServer((req, res) => {
     console.log("==============================\n");
 
     try {
+      runLogs = [];
+      lastRunResult = null;
+      currentRunError = null;
       runningProcess = spawn(
         process.execPath,
 
@@ -267,19 +318,42 @@ const server = http.createServer((req, res) => {
         {
           cwd: ROOT_DIR,
 
-          stdio: "inherit",
+          stdio: ["ignore", "pipe", "pipe"],
         },
       );
 
+      runningProcess.stdout.on("data", (chunk) => {
+        process.stdout.write(chunk);
+        appendRunLog(chunk);
+      });
+
+      runningProcess.stderr.on("data", (chunk) => {
+        process.stderr.write(chunk);
+        appendRunLog(chunk);
+      });
+
       runningProcess.on("close", (code) => {
         console.log(`\nTool kết thúc: ${code}`);
-
+        lastRunResult = {
+          success: code === 0,
+          code,
+          message: code === 0 ? "Đã hoàn thành tất cả lượt gửi." : (currentRunError || "Tool đã dừng do lỗi."),
+          finishedAt: new Date().toISOString(),
+          logs: runLogs.slice(-30),
+        };
         runningProcess = null;
       });
 
       runningProcess.on("error", (error) => {
         console.error("\n❌ TOOL ERROR:", error.message);
-
+        appendRunLog(error.message);
+        lastRunResult = {
+          success: false,
+          code: null,
+          message: error.message,
+          finishedAt: new Date().toISOString(),
+          logs: runLogs.slice(-30),
+        };
         runningProcess = null;
       });
 

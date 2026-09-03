@@ -1,0 +1,4 @@
+.env
+form-error.png
+web/server-output.log
+web/server-error.log

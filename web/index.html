@@ -2,173 +2,394 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>GG Form Tool</title>
-
-    <link rel="stylesheet" href="./style.css" />
+    <meta name="theme-color" content="#0a1020" />
+    <title>AutoForm — Google Forms Automation</title>
+    <link rel="stylesheet" href="./style.css?v=8" />
   </head>
 
   <body>
-    <main class="app">
-      <!-- HEADER -->
-      <header class="header">
-        <div>
-          <h1>GG Form Tool</h1>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <a class="brand" href="#top" aria-label="AutoForm">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
+                />
+                <path d="M14 3.5v4h4M9 12h6M9 16h4" />
+              </svg>
+            </span>
 
-          <p>Control Panel</p>
+            <span class="brand-copy">
+              <strong>AutoForm</strong>
+              <small>Local Automation</small>
+            </span>
+          </a>
+
+          <nav class="nav" aria-label="Điều hướng">
+            <a class="nav-link active" href="#form-config">
+              <span class="nav-index">01</span>
+              <span>Cấu hình form</span>
+            </a>
+
+            <a class="nav-link" href="#type-weights">
+              <span class="nav-index">02</span>
+              <span>Tỷ lệ theo dạng</span>
+            </a>
+
+            <a class="nav-link" href="#run-control">
+              <span class="nav-index">03</span>
+              <span>Điều khiển</span>
+            </a>
+          </nav>
         </div>
 
-        <div id="statusBadge" class="status-badge stopped">
-          <span class="status-dot"></span>
-          Đã dừng
-        </div>
-      </header>
+        <div class="sidebar-bottom">
+          <div class="privacy-card">
+            <div class="privacy-icon">✓</div>
 
-      <!-- FORM CONFIG -->
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2>Cấu hình Form</h2>
-
-            <p>Thiết lập Google Form và số lần thực thi</p>
+            <div>
+              <strong>Chạy cục bộ</strong>
+              <p>Cấu hình và thao tác được thực hiện trên máy của bạn.</p>
+            </div>
           </div>
         </div>
+      </aside>
 
-        <div class="field">
-          <label for="formUrl"> Google Form URL </label>
+      <main class="main" id="top">
+        <header class="topbar">
+          <div class="topbar-copy">
+            <div class="eyebrow">AutoForm CONTROL CENTER</div>
 
-          <input
-            id="formUrl"
-            type="text"
-            placeholder="https://forms.gle/..."
-            autocomplete="off"
-          />
-        </div>
+            <h1>
+              Google Forms
+              <span>Automation</span>
+            </h1>
 
-        <div class="grid-2">
+            <p>
+              Cấu hình form, điều chỉnh tỷ lệ và kiểm soát quá trình chạy tại
+              một nơi.
+            </p>
+          </div>
+
+          <div id="statusBadge" class="status-badge stopped" role="status">
+            <span class="status-dot"></span>
+            <span id="statusText">Đã dừng</span>
+          </div>
+        </header>
+
+        <section class="quick-guide" aria-label="Hướng dẫn nhanh">
+          <div class="guide-step">
+            <span>1</span>
+
+            <div>
+              <strong>Dán link form</strong>
+              <small>Hỗ trợ forms.gle và Google Forms.</small>
+            </div>
+          </div>
+
+          <div class="guide-arrow">→</div>
+
+          <div class="guide-step">
+            <span>2</span>
+
+            <div>
+              <strong>Chỉnh cấu hình</strong>
+              <small>Chọn số lượt, độ trễ và tỷ lệ.</small>
+            </div>
+          </div>
+
+          <div class="guide-arrow">→</div>
+
+          <div class="guide-step">
+            <span>3</span>
+
+            <div>
+              <strong>Bấm Chạy ngay</strong>
+              <small>Theo dõi trạng thái ở bên phải.</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 01 - FORM CONFIG -->
+        <!-- ====================================================== -->
+
+        <section class="card" id="form-config">
+          <div class="section-heading">
+            <div class="section-icon">01</div>
+
+            <div class="section-copy">
+              <h2>Cấu hình biểu mẫu</h2>
+              <p>Thông tin cơ bản để AutoForm biết form nào cần xử lý.</p>
+            </div>
+
+            <div class="auto-pill">
+              <span></span>
+              Tự nhận diện cấu trúc
+            </div>
+          </div>
+
           <div class="field">
-            <label for="total"> Số lần chạy </label>
+            <div class="label-row">
+              <label for="formUrl"> Đường dẫn Google Form </label>
 
-            <input id="total" type="number" min="1" value="5" />
+              <span class="required-badge"> Bắt buộc </span>
+            </div>
+
+            <div class="input-shell has-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M10.6 13.4a2 2 0 0 0 2.8 0l3-3a2 2 0 0 0-2.8-2.8l-1 1M13.4 10.6a2 2 0 0 0-2.8 0l-3 3a2 2 0 1 0 2.8 2.8l1-1"
+                />
+              </svg>
+
+              <input
+                id="formUrl"
+                type="url"
+                placeholder="https://forms.gle/..."
+                autocomplete="off"
+                spellcheck="false"
+              />
+
+              <span id="urlState" class="input-state"> Chưa có link </span>
+            </div>
+
+            <small class="field-help">
+              Chỉ cần dán link. Không cần sửa lại mã nguồn.
+            </small>
           </div>
 
-          <div class="field">
-            <label for="delay"> Delay giữa mỗi lần </label>
+          <div class="settings-grid">
+            <div class="field setting-box">
+              <label for="total"> Số lượt gửi </label>
 
-            <div class="input-unit">
-              <input id="delay" type="number" min="0" value="3000" />
+              <div class="input-shell">
+                <input id="total" type="number" min="1" value="5" />
 
-              <span> ms </span>
+                <span class="unit"> lượt </span>
+              </div>
+
+              <small class="field-help"> Số lần form được xử lý. </small>
+            </div>
+
+            <div class="field setting-box">
+              <label for="delay"> Nghỉ giữa mỗi lượt </label>
+
+              <div class="input-shell">
+                <input id="delay" type="number" min="0" step="0.1" value="3" />
+
+                <span class="unit"> giây </span>
+              </div>
+
+              <small class="field-help"> Giảm tải và dễ theo dõi hơn. </small>
+            </div>
+
+            <div class="toggle-card">
+              <div>
+                <div class="toggle-title-row">
+                  <span class="toggle-title"> Mở trình duyệt để theo dõi </span>
+
+                  <b id="browserState" class="toggle-state on"> Bật </b>
+                </div>
+
+                <small>
+                  Mỗi lượt sẽ mở tab để bạn nhìn thấy quá trình chạy.
+                </small>
+              </div>
+
+              <label class="switch" aria-label="Mở trình duyệt để theo dõi">
+                <input id="showBrowser" type="checkbox" checked />
+
+                <span class="slider"></span>
+              </label>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="toggle-container">
-          <div>
-            <div class="toggle-title">Headless Mode</div>
+        <!-- ====================================================== -->
+        <!-- 02 - WEIGHTS -->
+        <!-- ====================================================== -->
 
-            <div class="toggle-description">Bật để chạy Chrome ẩn</div>
+        <section class="card" id="type-weights">
+          <div class="section-heading">
+            <div class="section-icon">02</div>
+
+            <div class="section-copy">
+              <h2>Tỷ lệ đánh giá theo dạng</h2>
+
+              <p>
+                Mỗi loại câu hỏi có bộ tỷ lệ riêng. Tổng mỗi bộ phải bằng 100%.
+              </p>
+            </div>
+
+            <button id="positivePreset" class="ghost-button" type="button">
+              Thiên tích cực
+            </button>
           </div>
 
-          <label class="switch">
-            <input id="headless" type="checkbox" />
+          <div class="scale-legend" aria-hidden="true">
+            <span>1 · Thấp</span>
+            <i></i>
 
-            <span class="slider"></span>
-          </label>
-        </div>
-      </section>
+            <span>3 · Trung bình</span>
+            <i></i>
 
-      <!-- RATING -->
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2>Rating Weights</h2>
-
-            <p>Tỉ lệ random điểm từ 1 đến 5</p>
+            <span>5 · Cao</span>
           </div>
 
-          <div id="weightTotal" class="weight-total valid">Tổng: 100%</div>
-        </div>
+          <div id="weightTypes" class="weight-types"></div>
+        </section>
 
-        <div class="rating-grid">
-          <div class="rating-item">
-            <div class="rating-title">1 ★</div>
+        <!-- ====================================================== -->
+        <!-- 03 - CONTROL -->
+        <!-- ====================================================== -->
 
-            <div class="rating-input">
-              <input id="rating1" type="number" min="0" max="100" value="15" />
+        <section class="card control-card" id="run-control">
+          <div class="section-heading">
+            <div class="section-icon">03</div>
 
-              <span>%</span>
+            <div class="section-copy">
+              <h2>Điều khiển</h2>
+
+              <p>Kiểm tra cấu hình trước khi bắt đầu chạy.</p>
             </div>
           </div>
 
-          <div class="rating-item">
-            <div class="rating-title">2 ★</div>
+          <div
+            id="messageBox"
+            class="message-box"
+            role="alert"
+            aria-live="polite"
+          >
+            <span class="message-indicator"></span>
 
-            <div class="rating-input">
-              <input id="rating2" type="number" min="0" max="100" value="15" />
-
-              <span>%</span>
-            </div>
+            <span id="messageText"> Đang tải cấu hình… </span>
           </div>
 
-          <div class="rating-item">
-            <div class="rating-title">3 ★</div>
+          <!-- ERROR PANEL -->
 
-            <div class="rating-input">
-              <input id="rating3" type="number" min="0" max="100" value="20" />
+          <div id="errorPanel" class="error-panel" hidden>
+            <div class="error-panel-head">
+              <div class="error-panel-title">
+                <span class="error-icon"> ! </span>
 
-              <span>%</span>
+                <div>
+                  <h3>Chi tiết lỗi</h3>
+
+                  <p id="errorTime">Lượt chạy vừa kết thúc</p>
+                </div>
+              </div>
+
+              <div class="error-panel-actions">
+                <span id="errorCode" class="error-code"> EXIT — </span>
+
+                <button
+                  id="copyErrorButton"
+                  class="icon-button"
+                  type="button"
+                  title="Sao chép chi tiết lỗi"
+                >
+                  Sao chép
+                </button>
+
+                <button
+                  id="closeErrorButton"
+                  class="icon-button close-button"
+                  type="button"
+                  aria-label="Đóng bảng lỗi"
+                >
+                  ×
+                </button>
+              </div>
             </div>
+
+            <div class="error-summary">
+              <span> Nguyên nhân </span>
+
+              <strong id="errorSummary"></strong>
+            </div>
+
+            <div class="error-log-head">
+              <span> LOG GẦN NHẤT </span>
+
+              <span id="errorLogCount"></span>
+            </div>
+
+            <div id="errorLogs" class="error-logs"></div>
           </div>
 
-          <div class="rating-item">
-            <div class="rating-title">4 ★</div>
+          <!-- ACTION BAR -->
 
-            <div class="rating-input">
-              <input id="rating4" type="number" min="0" max="100" value="25" />
+          <div class="action-bar">
+            <div class="save-hint">
+              <span class="hint-dot"></span>
 
-              <span>%</span>
+              <span> Cấu hình sẽ được kiểm tra trước khi chạy. </span>
+            </div>
+
+            <div class="buttons">
+              <button id="saveButton" class="button secondary" type="button">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 4h12l2 2v14H5V4Z" />
+                  <path d="M8 4v6h8V4M8 20v-6h8v6" />
+                </svg>
+
+                Lưu cấu hình
+              </button>
+
+              <button id="stopButton" class="button danger" type="button">
+                <span class="stop-square"></span>
+
+                Dừng
+              </button>
+
+              <button id="startButton" class="button primary" type="button">
+                <span class="play-triangle"></span>
+
+                Chạy ngay
+              </button>
             </div>
           </div>
+        </section>
 
-          <div class="rating-item">
-            <div class="rating-title">5 ★</div>
+        <footer>
+          <span>AutoForm</span>
+          <span>•</span>
+          <span>Local automation dashboard</span>
+        </footer>
+      </main>
+    </div>
 
-            <div class="rating-input">
-              <input id="rating5" type="number" min="0" max="100" value="25" />
+    <!-- ======================================================== -->
+    <!-- TEMPLATE WEIGHT CARD -->
+    <!-- ======================================================== -->
 
-              <span>%</span>
-            </div>
+    <template id="weightCardTemplate">
+      <article class="weight-card">
+        <div class="weight-card-head">
+          <div class="type-icon"></div>
+
+          <div class="type-copy">
+            <h3></h3>
+            <p></p>
           </div>
+
+          <div class="weight-total valid">100%</div>
         </div>
-      </section>
 
-      <!-- CONTROL -->
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2>Điều khiển</h2>
+        <div class="weight-inputs"></div>
 
-            <p>Lưu cấu hình và điều khiển chương trình</p>
-          </div>
+        <div class="weight-card-foot">
+          <span> Tổng tỷ lệ phải bằng 100% </span>
+
+          <button class="mini-preset" type="button">Cân bằng</button>
         </div>
+      </article>
+    </template>
 
-        <div class="buttons">
-          <button id="saveButton" class="button save">💾 Lưu</button>
-
-          <button id="startButton" class="button start">▶ Chạy</button>
-
-          <button id="stopButton" class="button stop">■ Dừng</button>
-        </div>
-
-        <div id="messageBox" class="message-box">Sẵn sàng.</div>
-      </section>
-
-      <footer>GG Form Tool • Local Control Panel</footer>
-    </main>
-
-    <script src="./app.js"></script>
+    <script src="./app.js?v=7"></script>
   </body>
 </html>

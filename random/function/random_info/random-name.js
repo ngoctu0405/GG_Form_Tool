@@ -8,9 +8,18 @@ const NAMES = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
 // Lưu những tên đã sử dụng
 const usedNames = new Set();
+const NGUYEN_PROBABILITY = 0.45;
 
 function pick(array) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+function pickSurname(surnames) {
+  const nguyen = surnames.find((surname) => surname === "Nguyễn");
+  const otherSurnames = surnames.filter((surname) => surname !== "Nguyễn");
+
+  if (nguyen && Math.random() < NGUYEN_PROBABILITY) return nguyen;
+  return pick(otherSurnames.length ? otherSurnames : surnames);
 }
 
 export function random_name(gender) {
@@ -54,7 +63,7 @@ export function random_name(gender) {
   let attempts = 0;
 
   do {
-    surname = pick(surnames);
+    surname = pickSurname(surnames);
     middleName = pick(middleNames);
     firstName = pick(firstNames);
 

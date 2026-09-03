@@ -1,0 +1,103 @@
+[
+  "Trường THPT Nguyễn Thượng Hiền - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Thị Minh Khai - Thành phố Hồ Chí Minh",
+  "Trường THPT Bùi Thị Xuân - Thành phố Hồ Chí Minh",
+  "Trường THPT Gia Định - Thành phố Hồ Chí Minh",
+  "Trường THPT Phú Nhuận - Thành phố Hồ Chí Minh",
+  "Trường THPT Lê Quý Đôn - Thành phố Hồ Chí Minh",
+  "Trường THPT Trưng Vương - Thành phố Hồ Chí Minh",
+  "Trường THPT Mạc Đĩnh Chi - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Hữu Huân - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Hữu Cầu - Thành phố Hồ Chí Minh",
+  "Trường THPT Marie Curie - Thành phố Hồ Chí Minh",
+  "Trường THPT Võ Thị Sáu - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Công Trứ - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Du - Thành phố Hồ Chí Minh",
+  "Trường THPT Trần Khai Nguyên - Thành phố Hồ Chí Minh",
+  "Trường THPT Hùng Vương - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Chí Thanh - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Trung Trực - Thành phố Hồ Chí Minh",
+  "Trường THPT Trần Phú - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn Hiền - Thành phố Hồ Chí Minh",
+  "Trường THPT Nguyễn An Ninh - Thành phố Hồ Chí Minh",
+  "Trường THPT Nam Kỳ Khởi Nghĩa - Thành phố Hồ Chí Minh",
+  "Trường THPT Lê Trọng Tấn - Thành phố Hồ Chí Minh",
+  "Trường THPT Trường Chinh - Thành phố Hồ Chí Minh",
+  "Trường THPT Thủ Đức - Thành phố Hồ Chí Minh",
+  "Trường THPT Tây Thạnh - Thành phố Hồ Chí Minh",
+  "Trường THPT Bình Hưng Hòa - Thành phố Hồ Chí Minh",
+  "Trường THPT An Lạc - Thành phố Hồ Chí Minh",
+  "Trường THPT Hóc Môn - Thành phố Hồ Chí Minh",
+  "Trường THPT Củ Chi - Thành phố Hồ Chí Minh",
+  "Trường THPT chuyên Lê Hồng Phong - Thành phố Hồ Chí Minh",
+  "Trường Phổ thông Năng khiếu - Đại học Quốc gia Thành phố Hồ Chí Minh",
+
+  "Trường THPT Chu Văn An - Hà Nội",
+  "Trường THPT Phan Đình Phùng - Hà Nội",
+  "Trường THPT Việt Đức - Hà Nội",
+  "Trường THPT Kim Liên - Hà Nội",
+  "Trường THPT Yên Hòa - Hà Nội",
+  "Trường THPT Nguyễn Gia Thiều - Hà Nội",
+  "Trường THPT Cầu Giấy - Hà Nội",
+  "Trường THPT Nhân Chính - Hà Nội",
+
+  "Trường THPT Phan Châu Trinh - Đà Nẵng",
+  "Trường THPT Hoàng Hoa Thám - Đà Nẵng",
+  "Trường THPT Thái Phiên - Đà Nẵng",
+  "Trường THPT Trần Phú - Đà Nẵng",
+
+  "Trường THPT Quốc Học - Huế",
+  "Trường THPT Hai Bà Trưng - Huế",
+  "Trường THPT Nguyễn Huệ - Huế",
+
+  "Trường THPT Châu Văn Liêm - Cần Thơ",
+  "Trường THPT Bùi Hữu Nghĩa - Cần Thơ",
+  "Trường THPT Thốt Nốt - Cần Thơ",
+
+  "Trường THPT Ngô Quyền - Đồng Nai",
+  "Trường THPT Trấn Biên - Đồng Nai",
+  "Trường THPT Long Khánh - Đồng Nai",
+
+  "Trường THPT Trịnh Hoài Đức - Bình Dương",
+  "Trường THPT Dĩ An - Bình Dương",
+  "Trường THPT Bến Cát - Bình Dương",
+
+  "Trường THPT Vũng Tàu - Bà Rịa - Vũng Tàu",
+  "Trường THPT Nguyễn Huệ - Bà Rịa - Vũng Tàu",
+
+  "Trường THPT Lý Tự Trọng - Khánh Hòa",
+  "Trường THPT Nguyễn Văn Trỗi - Khánh Hòa",
+
+  "Trường THPT Trần Phú - Đà Lạt - Lâm Đồng",
+  "Trường THPT Bùi Thị Xuân - Đà Lạt - Lâm Đồng",
+
+  "Trường THPT Nguyễn Đình Chiểu - Tiền Giang",
+  "Trường THPT Trương Định - Tiền Giang",
+
+  "Trường THPT Nguyễn Đình Chiểu - Bến Tre",
+  "Trường THPT Võ Trường Toản - Bến Tre",
+
+  "Trường THPT Tân An - Long An",
+  "Trường THPT Đức Hòa - Long An",
+
+  "Trường THPT Nguyễn Trung Trực - Kiên Giang",
+  "Trường THPT Huỳnh Mẫn Đạt - Kiên Giang",
+
+  "Trường THPT Long Xuyên - An Giang",
+  "Trường THPT Chu Văn An - An Giang",
+
+  "Trường THPT Cao Lãnh 1 - Đồng Tháp",
+  "Trường THPT Thành phố Sa Đéc - Đồng Tháp",
+
+  "Trường THPT Hồ Thị Kỷ - Cà Mau",
+  "Trường THPT Cà Mau - Cà Mau",
+
+  "Trường THPT Lê Hồng Phong - Nam Định",
+  "Trường THPT Nguyễn Khuyến - Nam Định",
+
+  "Trường THPT Trần Phú - Vĩnh Phúc",
+  "Trường THPT Yên Lạc - Vĩnh Phúc",
+
+  "Trường THPT Chu Văn An - Thái Nguyên",
+  "Trường THPT Lương Ngọc Quyến - Thái Nguyên"
+]

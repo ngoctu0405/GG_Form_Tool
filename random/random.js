@@ -19,6 +19,7 @@ import { random_option } from "./function/random-option.js";
 import { random_email } from "./function/random_info/random-email.js";
 import { random_id } from "./function/random_info/random-id.js";
 import { random_unique } from "./function/random-unique.js";
+import { random_life_profile } from "./function/random_info/random-profile.js";
 
 export {
   random_name,
@@ -40,4 +41,5 @@ export {
   random_email,
   random_id,
   random_unique,
+  random_life_profile,
 };
