@@ -1,43 +1,43 @@
 {
-  "FORM_URL": "https://forms.gle/ZJh9N5SWnW8BxjNM9",
-  "TOTAL_SUBMISSIONS": 3,
+  "FORM_URL": "https://docs.google.com/forms/d/1Y92lrmBLS1MHLJ_0BfAzRIa46A1NMlQ0UZeE073U1qU/edit#responses",
+  "TOTAL_SUBMISSIONS": 5,
   "DELAY_BETWEEN_SUBMISSIONS": 3000,
   "HEADLESS": false,
   "QUESTION_TYPE_WEIGHTS": {
     "multipleChoice": {
-      "1": 5,
-      "2": 10,
-      "3": 15,
-      "4": 30,
-      "5": 40
+      "1": 15,
+      "2": 15,
+      "3": 20,
+      "4": 25,
+      "5": 25
     },
     "dropdown": {
-      "1": 5,
-      "2": 10,
-      "3": 15,
-      "4": 30,
-      "5": 40
+      "1": 15,
+      "2": 15,
+      "3": 20,
+      "4": 25,
+      "5": 25
     },
     "linearScale": {
-      "1": 5,
-      "2": 10,
-      "3": 15,
-      "4": 30,
-      "5": 40
+      "1": 15,
+      "2": 15,
+      "3": 20,
+      "4": 25,
+      "5": 25
     },
     "rating": {
-      "1": 5,
-      "2": 10,
-      "3": 15,
-      "4": 30,
-      "5": 40
+      "1": 15,
+      "2": 15,
+      "3": 20,
+      "4": 25,
+      "5": 25
     },
     "multipleChoiceGrid": {
-      "1": 5,
-      "2": 10,
-      "3": 15,
-      "4": 30,
-      "5": 40
+      "1": 15,
+      "2": 15,
+      "3": 20,
+      "4": 25,
+      "5": 25
     }
   }
 }

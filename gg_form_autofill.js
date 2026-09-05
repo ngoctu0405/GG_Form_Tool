@@ -1405,8 +1405,12 @@ async function chooseFromDropdown(page, question, title, person) {
   const dropdown = question.locator('[role="listbox"]:visible').first();
   if (!(await dropdown.count())) return;
 
+  // Google Forms có thể giữ menu của dropdown trước nằm đè lên câu tiếp theo.
+  // Đóng mọi menu đang mở trước khi tương tác với dropdown hiện tại.
+  await page.keyboard.press("Escape").catch(() => {});
+  await page.waitForTimeout(100);
   await dropdown.scrollIntoViewIfNeeded();
-  await dropdown.click();
+  await dropdown.click({ force: true });
   await page.waitForTimeout(180);
 
   const options = page.locator('[role="option"]:visible');
